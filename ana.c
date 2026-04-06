@@ -335,7 +335,7 @@ void makefile()
             witho[strlen(witho) - 1] = 'o';
             without[strlen(without) - 2] = '\0';
             fprintf(fp, "%s:", without);
-            fprintf(fp, " %s", witho);
+            //fprintf(fp, " %s", witho);
             for (int i = 0; i < ptr->dep_count; i++)
             {
 
@@ -346,7 +346,7 @@ void makefile()
                 fprintf(fp, " %s", cname);
             }
 
-            fprintf(fp, "\n\tgcc %s", witho);
+            fprintf(fp, "\n\tgcc");
             for (int i = 0; i < ptr->dep_count; i++)
             {
                 char tname[MAX_NAME];
