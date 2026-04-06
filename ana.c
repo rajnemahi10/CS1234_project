@@ -490,10 +490,17 @@ void dependency_graph(int n)
         }
         if(flag==0)
         {
-            printf("\n%s is not used anywhere\n",hptrr->name);
+            //printf("\n%s is not used anywhere\n",hptrr->name);
+            FILE *fpp=fopen("dep1.dot","a");
+            // mark unused header in red
+            fprintf(fpp, "\t\"%s\" [color=red, fontcolor=red];\n", hptrr->name);
+            fclose(fpp);
         }
         hptrr=hptrr->next;
     }
+    FILE *fppp=fopen("dep1.dot","a");
+    fprintf(fppp,"}");
+
 }
 int main()
 {
