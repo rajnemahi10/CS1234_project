@@ -474,6 +474,26 @@ void dependency_graph(int n)
     }
     fprintf(fp,"}");
     fclose(fp);
+
+    //checking if there are any unvisited headers
+    struct hnode *hptrr=headh;
+    while(hptrr!=NULL)
+    {
+        int flag=0;
+        for(int y=0;y<vcount;y++)
+        {
+            if(hptrr==visited[y])
+            {
+                flag=1;
+                break;
+            }
+        }
+        if(flag==0)
+        {
+            printf("\n%s is not used anywhere\n",hptrr->name);
+        }
+        hptrr=hptrr->next;
+    }
 }
 int main()
 {
