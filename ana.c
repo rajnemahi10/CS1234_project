@@ -110,21 +110,21 @@ void fdeplinker()
                 
                 while(fgets(name,MAX_LINE,fp)!=NULL)
                 {
-                    if(strstr(name,cmp))
+                    if(strstr(name,cmp))//constraint - function definition should be exactly same as one given in header
                     {
                         //moves to opening {
-                        while(fgets(name,MAX_LINE,fp) && !strchr(name,'{'));
+                        while(fgets(name,MAX_LINE,fp) && !strchr(name,'{'));// contraint 
                         
                         //constraint - the semicolon ending the function should be on a seperate line
                         FILE *fp2=fopen("extra","w");
-                        while(fgets(name,MAX_LINE,fp) != NULL && !strchr(name,'}'))
+                        do// constraint ending } should be on seperate line
                         {
                             //finding dependencies inside the function
                             
                             fprintf(fp2,"%s",name);
                             
 
-                        }
+                        }while(fgets(name,MAX_LINE,fp) != NULL && !strchr(name,'}'));
                         fclose(fp2);
                         checker(&(cptr->dep[i]->dep[j]));
                         break;
