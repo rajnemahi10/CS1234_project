@@ -574,6 +574,7 @@ int main()
     print_structure();
 
     dependency_graph(noofhfiles);
+    system("dot -Tpng dep1.dot -o dep1.png");
 
     makefile();
 
