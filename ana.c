@@ -167,6 +167,7 @@ void fdeplinker()
 
                         }while(fgets(name,MAX_LINE,fp) != NULL && !strchr(name,'}'));
                         fclose(fp2);
+                        system("rm extra");
                         checker(&(cptr->dep[i]->dep[j]));
                         break;
 

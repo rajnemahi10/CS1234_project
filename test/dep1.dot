@@ -1,11 +1,8 @@
 digraph G {
 	 "file2.c"->"file2.h";
 	 "file2.h"->"int sub (int a,int b);";
-	 "int sub (int a,int b);"->"int mult (int a,int b);";
 	 "file2.h"->"int mult (int a,int b);";
-	 "int mult (int a,int b);"->"int mult (int a,int b);";
 	 "file2.h"->"int stg (int a,int b);";
-	 "int stg (int a,int b);"->"int sub (int a,int b);";
 	 "file1.c"->"file1.h";
 	 "file1.h"->"int add (int a,int b);";
 	 "file1.h"->"int not_defined (int a,int b);";
