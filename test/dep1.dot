@@ -8,6 +8,9 @@ digraph G {
 	 "int stg (int a,int b);"->"int sub (int a,int b);";
 	 "file1.c"->"file1.h";
 	 "file1.h"->"int add (int a,int b);";
+	 "file1.h"->"int not_defined (int a,int b);";
 	 "file1.c"->"file2.h";
 	"file3.h" [color=red, fontcolor=red];
+	"int add (int a,int b);" [color=red, fontcolor=red];
+	"int not_defined (int a,int b);" [color=red, fontcolor=red];
 }

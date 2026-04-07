@@ -12,6 +12,7 @@ struct fnode
     char *just_name;
     struct fnode *next;
     int self;// if there exist a self recursion
+    int visited;// to check if any function is not defined inside any .c file
 };
 struct hnode
 {
@@ -46,12 +47,14 @@ void insertfunc(struct fnode **func,struct fnode *ins)
     new->name = strdup(ins->name);
     new->just_name = strdup(ins->just_name);
     new->self = ins->self;
+    new->visited=ins->visited;
     
 
     new->next=(*func)->next;
     (*func)->next=new;
 
 }
+//constraint - not more than 1 c file can have declaration of a particular function
 //constraint func - if there is nested block inside function then it should } should not be on a seperate line
 void checker(struct fnode **func)
 {
@@ -75,13 +78,50 @@ void checker(struct fnode **func)
                         (*func)->self=1;
                         break;
                     }
-
                     insertfunc(func,hptr->dep[i]);
                 }
             }
             pclose(fp);
         }
         hptr=hptr->next;
+    }
+}
+//whatever functions are defined in .c files marks those as visited (a global scan) 
+void mark_definitions()
+{
+    struct cnode *cptr=headc;
+    while(cptr!=NULL)
+    {
+        FILE *fp=fopen(cptr->name,"r");
+        if(fp == NULL){
+            perror("fopen failed");
+            return;
+        }
+        for(int i=0;i<cptr->dep_count;i++)
+        {
+            for(int j=0;j<cptr->dep[i]->dep_count;j++)
+            {
+                rewind(fp);//brings it back to start of file
+                char name[MAX_LINE];
+                char cmp[MAX_NAME];
+                strcpy(cmp,cptr->dep[i]->dep[j]->name);
+                int len = strlen(cmp);
+                //removing semicolon
+                if (len > 0 && cmp[len - 1] == ';')
+                    cmp[len - 1] = '\0';
+                while(fgets(name,MAX_LINE,fp)!=NULL)
+                {
+                    if(strstr(name,cmp))//constraint - function definition should be exactly same as one given in header
+                    {
+                        cptr->dep[i]->dep[j]->visited = 1;
+                        break;
+                    }
+                }
+
+            }
+        }
+        fclose(fp);
+        cptr = cptr->next;
     }
 }
 //reads function declarations and links functions - constraint function should be declared with same parameters in .c file as .h file
@@ -112,6 +152,7 @@ void fdeplinker()
                 {
                     if(strstr(name,cmp))//constraint - function definition should be exactly same as one given in header
                     {
+                        //cptr->dep[i]->dep[j]->visited = 1;(job of mark definitions)
                         //moves to opening {
                         while(fgets(name,MAX_LINE,fp) && !strchr(name,'{'));// contraint 
                         
@@ -163,6 +204,7 @@ void finitializer(struct hnode *header)
         header->dep[o] = malloc(sizeof(struct fnode));
         header->dep[o]->name=strdup(bufferr);
         header->dep[o]->next=NULL;
+        header->dep[o]->visited=0;
         header->dep[o]->self = 0;
         o++;
     }
@@ -472,7 +514,7 @@ void dependency_graph(int n)
         }
         cptr=cptr->next;
     }
-    fprintf(fp,"}");
+    
     fclose(fp);
 
     //checking if there are any unvisited headers
@@ -498,8 +540,26 @@ void dependency_graph(int n)
         }
         hptrr=hptrr->next;
     }
+    //coloring undefined functions in red
+    struct hnode *hp=headh;
+    while(hp!=NULL)
+    {
+        for(int g=0;g<hp->dep_count;g++)
+        {
+            struct fnode *funcy=hp->dep[g];
+            if(!funcy->visited)
+            {
+                FILE *fpppp=fopen("dep1.dot","a");
+                // mark unudefined function in red
+                fprintf(fpppp, "\t\"%s\" [color=red, fontcolor=red];\n", funcy->name);
+                fclose(fpppp);
+            }
+        }
+        hp=hp->next;
+    }
     FILE *fppp=fopen("dep1.dot","a");
     fprintf(fppp,"}");
+    fclose(fppp);
 
 }
 int main()
@@ -509,6 +569,7 @@ int main()
     cinitializer(noofhfiles);
     chlinker();
 
+    mark_definitions();
     fdeplinker();
     print_structure();
 
