@@ -124,6 +124,38 @@ void mark_definitions()
         cptr = cptr->next;
     }
 }
+//removing constraint that function defn in .h should be same as func defn in .c
+//function defn format- return_type func_name(type a,...)
+int process(char *name,char *sig,char *justname)
+{
+    char ret1[MAX_LINE];
+    strcpy(ret1,sig);
+
+    char ret[MAX_LINE];
+    strcpy(ret,strtok(ret1," "));//stores return type
+    
+    strcat(ret," ");
+
+    char j2[MAX_LINE];
+    strcpy(j2,justname);
+
+    strcat(j2,"(");
+
+    char jcopy[MAX_LINE];//creating copy so no other string gets modified
+    strcpy(jcopy, justname);
+    strcat(jcopy, " ");
+
+
+    if(strstr(name,ret)==NULL || (strstr(name,j2)==NULL && strstr(name,jcopy)==NULL))
+        return 0;
+    
+    
+
+    return 1;
+    
+        
+}
+
 //reads function declarations and links functions - constraint function should be declared with same parameters in .c file as .h file
 void fdeplinker()
 {
@@ -137,20 +169,24 @@ void fdeplinker()
         }
         for(int i=0;i<cptr->dep_count;i++)
         {
+            
             for(int j=0;j<cptr->dep[i]->dep_count;j++)
             {
                 rewind(fp);//brings it back to start of file
                 char name[MAX_LINE];
                 char cmp[MAX_NAME];
+                char cmp2[MAX_LINE];
                 strcpy(cmp,cptr->dep[i]->dep[j]->name);
+                strcpy(cmp2,cptr->dep[i]->dep[j]->just_name);
                 int len = strlen(cmp);
                 //removing semicolon
                 if (len > 0 && cmp[len - 1] == ';')
                     cmp[len - 1] = '\0';
+
                 
                 while(fgets(name,MAX_LINE,fp)!=NULL)
                 {
-                    if(strstr(name,cmp))//constraint - function definition should be exactly same as one given in header
+                    if(process(name,cmp,cmp2))//constraint - function definition should be exactly same as one given in header
                     {
                         //cptr->dep[i]->dep[j]->visited = 1;(job of mark definitions)
                         //moves to opening {
