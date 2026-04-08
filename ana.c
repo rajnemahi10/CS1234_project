@@ -154,20 +154,34 @@ void fdeplinker()
                     {
                         //cptr->dep[i]->dep[j]->visited = 1;(job of mark definitions)
                         //moves to opening {
-                        while(fgets(name,MAX_LINE,fp) && !strchr(name,'{'));// contraint 
+                        while(fgets(name,MAX_LINE,fp) && !strchr(name,'{'));
                         
                         //constraint - the semicolon ending the function should be on a seperate line
                         FILE *fp2=fopen("extra","w");
-                        do// constraint ending } should be on seperate line
+                        int inbrace=0;
+                        int outbrace=0;
+                        int l=0;// to make sure we're reading content after {- opening brace
+                        do// constraint ending } should be on seperate line - removed this constraint
                         {
-                            //finding dependencies inside the function
-                            
+                            //printing function code into extra
                             fprintf(fp2,"%s",name);
+                            for(int y=0;y<strlen(name);y++)
+                            {
+                                if(name[y]=='{')
+                                    inbrace++;
+                                if(name[y]=='}')
+                                    outbrace++;
+                            }
                             
-
-                        }while(fgets(name,MAX_LINE,fp) != NULL && !strchr(name,'}'));
+                            
+                                                    
+                        }
+                        while(fgets(name,MAX_LINE,fp) != NULL && inbrace!=outbrace);//all braces are matched then inbrace = outbrace
+                        
+                        if(outbrace>inbrace)
+                            printf("syntax error in %s\n",cptr->dep[i]->dep[j]->name);
                         fclose(fp2);
-                        //system("rm extra");
+                        
                         checker(&(cptr->dep[i]->dep[j]));
                         break;
 
@@ -181,6 +195,8 @@ void fdeplinker()
         cptr=cptr->next;
     }
 }
+
+
 
 
 //to read function names and store inside array
