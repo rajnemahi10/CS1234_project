@@ -4,6 +4,7 @@
 int MAX_NAME = 100;
 int MAX_CMD = 100;
 int MAX_LINE=100;
+#define MAX_FUNC 1000//constraint
 struct cnode *headc = NULL;
 struct hnode *headh = NULL;
 struct fnode
@@ -126,6 +127,7 @@ void mark_definitions()
 }
 //removing constraint that function defn in .h should be same as func defn in .c
 //function defn format- return_type func_name(type a,...)
+//constraint - can't add initialization and function call on same line
 int process(char *name,char *sig,char *justname)
 {
     char ret1[MAX_LINE];
@@ -511,6 +513,7 @@ void print_structure()
 
     printf("\n=====================\n");
 }
+//coloring graph .c - blue, .h - yellow, .f - green
 void dependency_graph(int n)
 {
     FILE *fp=fopen("dep1.dot","w");
@@ -523,12 +526,17 @@ void dependency_graph(int n)
 
 
     int vcount = 0;
+    char *fvisited[MAX_FUNC];
+    int fcount=0;
 
     while(cptr!=NULL)
     {
+        fprintf(fp,"\t \"%s\" [style=filled, fillcolor=lightblue];\n",cptr->name);
         for(int i=0;i<cptr->dep_count;i++)
         {
             fprintf(fp,"\t \"%s\"->\"%s\";\n",cptr->name,cptr->dep[i]->name);
+            
+            
             int flag=0;
             for(int t=0;t<vcount;t++)
             {
@@ -541,25 +549,51 @@ void dependency_graph(int n)
             if(flag==0)
             {
                 
-    
+                fprintf(fp,"\t \"%s\" [style=filled, fillcolor=lightyellow];\n",cptr->dep[i]->name);
                 
                 for(int j=0;j<cptr->dep[i]->dep_count;j++)
                 {
                     struct fnode *func = cptr->dep[i]->dep[j];
                     fprintf(fp,"\t \"%s\"->\"%s\";\n",cptr->dep[i]->name,cptr->dep[i]->dep[j]->name);
-                    if(func->self == 1)
+                    int flag2=0;
+                    for(int tr=0;tr<fcount;tr++)
                     {
-                        fprintf(fp,"\t \"%s\"->\"%s\";\n",
-                                func->name,
-                                func->name);
-                    }
-                    struct fnode *fptr=cptr->dep[i]->dep[j]->next;
-                    while(fptr!=NULL)
-                    {
-                        fprintf(fp,"\t \"%s\"->\"%s\";\n",cptr->dep[i]->dep[j]->name,fptr->name);
-                        fptr=fptr->next;
+                        if(strcmp(fvisited[tr],cptr->dep[i]->dep[j]->just_name)==0)
+                            flag2=1;
                         
                     }
+                    if(flag2==0)
+                    {
+                        fprintf(fp,"\t \"%s\" [style=filled, fillcolor=lightgreen];\n",
+        cptr->dep[i]->dep[j]->name);
+                        fvisited[fcount++] = cptr->dep[i]->dep[j]->just_name;
+                        if(func->self == 1)
+                        {
+                            fprintf(fp,"\t \"%s\"->\"%s\";\n",
+                                    func->name,
+                                    func->name);
+                        }
+                        struct fnode *fptr=cptr->dep[i]->dep[j]->next;
+                        while(fptr!=NULL)
+                        {
+                            int flag3 = 0;
+                            for(int tr=0; tr<fcount; tr++)
+                            {
+                                if(strcmp(fvisited[tr], fptr->just_name) == 0)
+                                    flag3 = 1;
+                            }
+
+                            if(flag3 == 0)
+                            {
+                                fprintf(fp,"\t \"%s\" [style=filled, fillcolor=lightgreen];\n",
+                                        fptr->name);
+                                fvisited[fcount++] = fptr->just_name;
+                            }
+                            fptr=fptr->next;
+                            
+                        }
+                    }
+                    
                 }
                 visited[vcount++]=cptr->dep[i];
             }
@@ -588,7 +622,7 @@ void dependency_graph(int n)
             //printf("\n%s is not used anywhere\n",hptrr->name);
             FILE *fpp=fopen("dep1.dot","a");
             // mark unused header in red
-            fprintf(fpp, "\t\"%s\" [color=red, fontcolor=red];\n", hptrr->name);
+            fprintf(fpp, "\t\"%s\" [style=filled, color=red, fillcolor=lightyellow, fontcolor=red];\n", hptrr->name);// filled color should be yellow for .h
             fclose(fpp);
         }
         hptrr=hptrr->next;
