@@ -562,17 +562,15 @@ void dependency_graph(int n)
                             flag2=1;
                         
                     }
+                    if(func->self == 1)
+                    {
+                        fprintf(fp,"\t \"%s\"->\"%s\";\n",func->name,func->name);
+                    }
                     if(flag2==0)
                     {
                         fprintf(fp,"\t \"%s\" [style=filled, fillcolor=lightgreen];\n",
         cptr->dep[i]->dep[j]->name);
                         fvisited[fcount++] = cptr->dep[i]->dep[j]->just_name;
-                        if(func->self == 1)
-                        {
-                            fprintf(fp,"\t \"%s\"->\"%s\";\n",
-                                    func->name,
-                                    func->name);
-                        }
                         struct fnode *fptr=cptr->dep[i]->dep[j]->next;
                         while(fptr!=NULL)
                         {
