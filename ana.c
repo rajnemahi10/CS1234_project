@@ -574,6 +574,7 @@ void dependency_graph(int n)
                         struct fnode *fptr=cptr->dep[i]->dep[j]->next;
                         while(fptr!=NULL)
                         {
+                            fprintf(fp,"\t \"%s\"->\"%s\";\n",func->name,fptr->name);
                             int flag3 = 0;
                             for(int tr=0; tr<fcount; tr++)
                             {
@@ -662,6 +663,6 @@ int main()
     system("dot -Tpng dep1.dot -o dep1.png");
 
     makefile();
-    system("rm extra");
+    //system("rm extra");
 
 }
