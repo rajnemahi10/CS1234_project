@@ -19,5 +19,6 @@ int stg (int a,int b)
 int main()
 {
     printf("stg");
+    stg();
 }
 

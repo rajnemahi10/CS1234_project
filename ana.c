@@ -1,6 +1,8 @@
+//constraint all functions used must have a signature in the header file
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 int MAX_NAME = 100;
 int MAX_CMD = 100;
 int MAX_LINE=100;
@@ -29,6 +31,168 @@ struct cnode
     struct hnode **dep; // array of headers inside .c files
     int dep_count;
 };
+char *getname(char *buffer)
+{
+    char *ptr=buffer;
+    while((ptr=strstr(ptr,"("))!=NULL)
+    {
+        char *start=ptr-1;
+
+        //skip spaces
+        while(start>=buffer && (*start==' ' || *start=='\t'))
+            start--;
+
+        char *end=start;
+
+        //get function name
+        while(start>=buffer && (isalnum(*start) || *start=='_'))
+            start--;
+        
+        start++;
+
+        int len=end-start+1;
+        if(len<=0)
+        {
+            ptr++;
+            continue;
+        }
+        char *name = malloc(len + 1);
+        strncpy(name, start, len);
+        name[len] = '\0';
+        // ignore keywords
+        if (strcmp(name, "if") == 0 ||
+            strcmp(name, "while") == 0 ||
+            strcmp(name, "for") == 0 ||
+            strcmp(name, "switch") == 0 ||
+            strcmp(name, "return") == 0 ||
+            strcmp(name, "sizeof") == 0 ||
+            strcmp(name, "printf") == 0 || strlen(name) == 0 )
+        {
+            free(name);
+            ptr++; 
+            continue;
+        }
+        return name;
+    }
+    return NULL;
+
+}
+void main_processing()
+{
+    FILE *dep=fopen("dep1.dot","a");
+    if (dep == NULL)
+    {
+        perror("fopen failed");
+        return;
+    }
+    struct cnode *cptr=headc;
+    while(cptr!=NULL)
+    {
+        FILE *fp=fopen(cptr->name,"r");
+        if (fp == NULL)
+        {
+            perror("fopen failed");
+            cptr = cptr->next;
+            continue;
+        }
+        char buffer[MAX_LINE];
+        int flag=0;//in main
+        
+        int brace_count=0;
+        while(fgets(buffer,MAX_LINE,fp)!=NULL)
+        {
+            if(flag==0)
+            {
+                
+                char *ptr=strstr(buffer,"main");
+                
+                if(ptr!=NULL)
+                {
+                    
+                    ptr+=4;//move after main
+                    
+                    
+                    //skip spaces
+                    while(*ptr==' ' || *ptr=='\t')
+                        ptr++;
+
+                    if(*ptr=='(')
+                    {
+                        flag=1;//valid main
+                        printf("found main in %s\n",cptr->name);
+
+                        
+                        printf("printing main dependency in dependency for %s",cptr->name);
+                        fprintf(dep,"\t\"%s\"->\"main_of_%s\";\n",cptr->name,cptr->name);
+                        
+                        // count braces on same line as main
+                        for(int i=0; buffer[i]!='\0'; i++)
+                        {
+                            if(buffer[i]=='{')
+                                brace_count++;
+                            if(buffer[i]=='}')
+                                brace_count--;
+                        }
+                        break;
+
+                    }
+                
+
+                    
+                }
+                
+
+            }
+        }
+        if(flag==1)
+        {
+            
+            
+            
+                
+            while(fgets(buffer,MAX_LINE,fp)!=NULL)
+            {
+                char *temp = buffer;
+                char *funcyy;
+
+                while(*temp!='\0' && (funcyy = getname(temp)) != NULL)
+                {
+                    fprintf(dep,"\t\"main_of_%s\"->\"%s\";\n",cptr->name,funcyy);
+
+                    char *next = strstr(temp, funcyy);
+                    if(next == NULL)
+                        temp++;
+                    else
+                        temp = next + strlen(funcyy);
+
+                    free(funcyy);
+                }
+
+                
+                
+                for(int i=0;buffer[i]!='\0';i++)
+                {
+                    if(buffer[i]=='{')
+                        brace_count++;
+                    if(buffer[i]=='}')
+                        brace_count--;
+                }
+                if(brace_count==0)
+                    break;
+                
+                
+            }
+        }
+        fclose(fp);
+        cptr = cptr->next;
+
+    
+    
+    }
+    fclose(dep);
+     
+}
+
 void insertAtFrontC(char *name, int noofhfiles)
 {
     struct cnode *new = malloc(sizeof(struct cnode));
@@ -643,9 +807,7 @@ void dependency_graph(int n)
         }
         hp=hp->next;
     }
-    FILE *fppp=fopen("dep1.dot","a");
-    fprintf(fppp,"}");
-    fclose(fppp);
+    
 
 }
 int main()
@@ -657,12 +819,18 @@ int main()
 
     mark_definitions();
     fdeplinker();
-    print_structure();
+    
+    //print_structure();
 
     dependency_graph(noofhfiles);
+    main_processing();
     system("dot -Tpng dep1.dot -o dep1.png");
 
     makefile();
-    //system("rm extra");
+
+    FILE *fppp=fopen("dep1.dot","a");
+    fprintf(fppp,"}");
+    fclose(fppp);
+    system("rm extra");
 
 }

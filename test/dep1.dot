@@ -22,4 +22,6 @@ digraph G {
 	"file3.h" [style=filled, color=red, fillcolor=lightyellow, fontcolor=red];
 	"int add (int a,int b);" [color=red, fontcolor=red];
 	"int not_defined (int a,int b);" [color=red, fontcolor=red];
+	"file2.c"->"main_of_file2.c";
+	"main_of_file2.c"->"stg";
 }
