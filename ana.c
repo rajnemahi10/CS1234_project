@@ -31,11 +31,78 @@ struct cnode
     struct hnode **dep; // array of headers inside .c files
     int dep_count;
 };
+
+// Function signatures
+int is_ignored_function(char *name);
+int count_braces_line(char *buffer);
+void write_dot_edge(FILE *fp, char *from, char *to);
+void write_dot_node(FILE *fp, char *name, char *fillcolor);
+void write_unused_headers(FILE *fp, struct hnode **visited, int vcount);
+void write_undefined_functions(FILE *fp);
+char *getname(char *buffer);
+void main_processing(FILE *dep);
+void insertAtFrontC(char *name, int noofhfiles);
+void insertfunc(struct fnode **func,struct fnode *ins);
+void checker(struct fnode **func);
+void mark_definitions();
+int process(char *name,char *sig,char *justname);
+void fdeplinker();
+void finitializer(struct hnode *header);
+void insertAtFrontH(char *name);
+void cinitializer(int noofhfiles);
+int hinitializer();
+void chlinker();
+void makefile();
+void print_structure();
+void dependency_graph(int n);
+int main();
+
+int is_ignored_function(char *name)
+{
+    return strcmp(name, "if") == 0 ||
+           strcmp(name, "while") == 0 ||
+           strcmp(name, "for") == 0 ||
+           strcmp(name, "switch") == 0 ||
+           strcmp(name, "return") == 0 ||
+           strcmp(name, "sizeof") == 0 ||
+           strcmp(name, "printf") == 0 ||
+           strlen(name) == 0;
+}
+
+int count_braces_line(char *buffer)
+{
+    int brace_count = 0;
+    for(int i=0; buffer[i]!='\0'; i++)
+    {
+        if(buffer[i]=='{')
+            brace_count++;
+        if(buffer[i]=='}')
+            brace_count--;
+    }
+    return brace_count;
+}
+
+void write_dot_edge(FILE *fp, char *from, char *to)
+{
+    fprintf(fp,"\t\"%s\"->\"%s\";\n",from,to);
+}
+
+void write_dot_node(FILE *fp, char *name, char *fillcolor)
+{
+    fprintf(fp,"\t \"%s\" [style=filled, fillcolor=%s];\n",name,fillcolor);
+}
+
 char *getname(char *buffer)
 {
     char *ptr=buffer;
     while((ptr=strstr(ptr,"("))!=NULL)
     {
+        //avoid reading before buffer if '(' is the first character.
+        if(ptr == buffer)
+        {
+            ptr++;
+            continue;
+        }
         char *start=ptr-1;
 
         //skip spaces
@@ -60,13 +127,7 @@ char *getname(char *buffer)
         strncpy(name, start, len);
         name[len] = '\0';
         // ignore keywords
-        if (strcmp(name, "if") == 0 ||
-            strcmp(name, "while") == 0 ||
-            strcmp(name, "for") == 0 ||
-            strcmp(name, "switch") == 0 ||
-            strcmp(name, "return") == 0 ||
-            strcmp(name, "sizeof") == 0 ||
-            strcmp(name, "printf") == 0 || strlen(name) == 0 )
+        if (is_ignored_function(name))
         {
             free(name);
             ptr++; 
@@ -77,14 +138,8 @@ char *getname(char *buffer)
     return NULL;
 
 }
-void main_processing()
+void main_processing(FILE *dep)
 {
-    FILE *dep=fopen("dep1.dot","a");
-    if (dep == NULL)
-    {
-        perror("fopen failed");
-        return;
-    }
     struct cnode *cptr=headc;
     while(cptr!=NULL)
     {
@@ -122,17 +177,14 @@ void main_processing()
                         printf("found main in %s\n",cptr->name);
 
                         
-                        printf("printing main dependency in dependency for %s",cptr->name);
-                        fprintf(dep,"\t\"%s\"->\"main_of_%s\";\n",cptr->name,cptr->name);
+                        printf("printing main dependency in dependency for %s\n",cptr->name);
+                        char main_name[MAX_NAME + 20];
+                        sprintf(main_name,"main_of_%s",cptr->name);
+                        //use quoted DOT edge so filenames like file2.c are valid.
+                        write_dot_edge(dep,cptr->name,main_name);
                         
                         // count braces on same line as main
-                        for(int i=0; buffer[i]!='\0'; i++)
-                        {
-                            if(buffer[i]=='{')
-                                brace_count++;
-                            if(buffer[i]=='}')
-                                brace_count--;
-                        }
+                        brace_count += count_braces_line(buffer);
                         break;
 
                     }
@@ -157,8 +209,11 @@ void main_processing()
 
                 while(*temp!='\0' && (funcyy = getname(temp)) != NULL)
                 {
-                    fprintf(dep,"\t\"main_of_%s\"->\"%s\";\n",cptr->name,funcyy);
+                    char main_name[MAX_NAME + 20];
+                    sprintf(main_name,"main_of_%s",cptr->name);
+                    write_dot_edge(dep,main_name,funcyy);
 
+                    //move ahead in the original buffer to avoid finding the same call forever.
                     char *next = strstr(temp, funcyy);
                     if(next == NULL)
                         temp++;
@@ -170,13 +225,7 @@ void main_processing()
 
                 
                 
-                for(int i=0;buffer[i]!='\0';i++)
-                {
-                    if(buffer[i]=='{')
-                        brace_count++;
-                    if(buffer[i]=='}')
-                        brace_count--;
-                }
+                brace_count += count_braces_line(buffer);
                 if(brace_count==0)
                     break;
                 
@@ -189,7 +238,6 @@ void main_processing()
     
     
     }
-    fclose(dep);
      
 }
 
@@ -362,12 +410,11 @@ void fdeplinker()
                         FILE *fp2=fopen("extra","w");
                         int inbrace=0;
                         int outbrace=0;
-                        int l=0;// to make sure we're reading content after {- opening brace
                         do// constraint ending } should be on seperate line - removed this constraint
                         {
                             //printing function code into extra
                             fprintf(fp2,"%s",name);
-                            for(int y=0;y<strlen(name);y++)
+                            for(size_t y=0;y<strlen(name);y++)
                             {
                                 if(name[y]=='{')
                                     inbrace++;
@@ -677,96 +724,9 @@ void print_structure()
 
     printf("\n=====================\n");
 }
-//coloring graph .c - blue, .h - yellow, .f - green
-void dependency_graph(int n)
+
+void write_unused_headers(FILE *fp, struct hnode **visited, int vcount)
 {
-    FILE *fp=fopen("dep1.dot","w");
-    fprintf(fp,"digraph G {\n");
-    struct cnode *cptr=headc;
-    struct hnode *visited[n];  
-
-    for(int i = 0; i < n; i++)
-    visited[i] = NULL;
-
-
-    int vcount = 0;
-    char *fvisited[MAX_FUNC];
-    int fcount=0;
-
-    while(cptr!=NULL)
-    {
-        fprintf(fp,"\t \"%s\" [style=filled, fillcolor=lightblue];\n",cptr->name);
-        for(int i=0;i<cptr->dep_count;i++)
-        {
-            fprintf(fp,"\t \"%s\"->\"%s\";\n",cptr->name,cptr->dep[i]->name);
-            
-            
-            int flag=0;
-            for(int t=0;t<vcount;t++)
-            {
-                if(visited[t]==cptr->dep[i])
-                {
-                    flag=1;
-                    break;
-                }
-            }
-            if(flag==0)
-            {
-                
-                fprintf(fp,"\t \"%s\" [style=filled, fillcolor=lightyellow];\n",cptr->dep[i]->name);
-                
-                for(int j=0;j<cptr->dep[i]->dep_count;j++)
-                {
-                    struct fnode *func = cptr->dep[i]->dep[j];
-                    fprintf(fp,"\t \"%s\"->\"%s\";\n",cptr->dep[i]->name,cptr->dep[i]->dep[j]->name);
-                    int flag2=0;
-                    for(int tr=0;tr<fcount;tr++)
-                    {
-                        if(strcmp(fvisited[tr],cptr->dep[i]->dep[j]->just_name)==0)
-                            flag2=1;
-                        
-                    }
-                    if(func->self == 1)
-                    {
-                        fprintf(fp,"\t \"%s\"->\"%s\";\n",func->name,func->name);
-                    }
-                    if(flag2==0)
-                    {
-                        fprintf(fp,"\t \"%s\" [style=filled, fillcolor=lightgreen];\n",
-        cptr->dep[i]->dep[j]->name);
-                        fvisited[fcount++] = cptr->dep[i]->dep[j]->just_name;
-                        struct fnode *fptr=cptr->dep[i]->dep[j]->next;
-                        while(fptr!=NULL)
-                        {
-                            fprintf(fp,"\t \"%s\"->\"%s\";\n",func->name,fptr->name);
-                            int flag3 = 0;
-                            for(int tr=0; tr<fcount; tr++)
-                            {
-                                if(strcmp(fvisited[tr], fptr->just_name) == 0)
-                                    flag3 = 1;
-                            }
-
-                            if(flag3 == 0)
-                            {
-                                fprintf(fp,"\t \"%s\" [style=filled, fillcolor=lightgreen];\n",
-                                        fptr->name);
-                                fvisited[fcount++] = fptr->just_name;
-                            }
-                            fptr=fptr->next;
-                            
-                        }
-                    }
-                    
-                }
-                visited[vcount++]=cptr->dep[i];
-            }
-
-        }
-        cptr=cptr->next;
-    }
-    
-    fclose(fp);
-
     //checking if there are any unvisited headers
     struct hnode *hptrr=headh;
     while(hptrr!=NULL)
@@ -783,13 +743,16 @@ void dependency_graph(int n)
         if(flag==0)
         {
             //printf("\n%s is not used anywhere\n",hptrr->name);
-            FILE *fpp=fopen("dep1.dot","a");
             // mark unused header in red
-            fprintf(fpp, "\t\"%s\" [style=filled, color=red, fillcolor=lightyellow, fontcolor=red];\n", hptrr->name);// filled color should be yellow for .h
-            fclose(fpp);
+            //removed reopening dep1.dot repeatedly; write to the existing graph file.
+            fprintf(fp, "\t\"%s\" [style=filled, color=red, fillcolor=lightyellow, fontcolor=red];\n", hptrr->name);// filled color should be yellow for .h
         }
         hptrr=hptrr->next;
     }
+}
+
+void write_undefined_functions(FILE *fp)
+{
     //coloring undefined functions in red
     struct hnode *hp=headh;
     while(hp!=NULL)
@@ -799,15 +762,113 @@ void dependency_graph(int n)
             struct fnode *funcy=hp->dep[g];
             if(!funcy->visited)
             {
-                FILE *fpppp=fopen("dep1.dot","a");
                 // mark unudefined function in red
-                fprintf(fpppp, "\t\"%s\" [color=red, fontcolor=red];\n", funcy->name);
-                fclose(fpppp);
+                //removed reopen dep1.dot repeatedly; write to the existing graph file.
+                fprintf(fp, "\t\"%s\" [color=red, fontcolor=red];\n", funcy->name);
             }
         }
         hp=hp->next;
     }
+}
+
+//coloring graph .c - blue, .h - yellow, .f - green
+void dependency_graph(int n)
+{
+    FILE *fp=fopen("dep1.dot","w");
+    if(fp == NULL)
+    {
+        perror("fopen failed");
+        return;
+    }
+    fprintf(fp,"digraph G {\n");
+    struct cnode *cptr=headc;
+    struct hnode *visited[n];  
+
+    for(int i = 0; i < n; i++)
+    visited[i] = NULL;
+
+
+    int vcount = 0;
+    char *fvisited[MAX_FUNC];
+    int fcount=0;
+
+    while(cptr!=NULL)
+    {
+        write_dot_node(fp,cptr->name,"lightblue");
+        for(int i=0;i<cptr->dep_count;i++)
+        {
+            write_dot_edge(fp,cptr->name,cptr->dep[i]->name);
+            
+            
+            int flag=0;
+            for(int t=0;t<vcount;t++)
+            {
+                if(visited[t]==cptr->dep[i])
+                {
+                    flag=1;
+                    break;
+                }
+            }
+            if(flag==0)
+            {
+                
+                write_dot_node(fp,cptr->dep[i]->name,"lightyellow");
+                
+                for(int j=0;j<cptr->dep[i]->dep_count;j++)
+                {
+                    struct fnode *func = cptr->dep[i]->dep[j];
+                    write_dot_edge(fp,cptr->dep[i]->name,cptr->dep[i]->dep[j]->name);
+                    int flag2=0;
+                    for(int tr=0;tr<fcount;tr++)
+                    {
+                        if(strcmp(fvisited[tr],cptr->dep[i]->dep[j]->just_name)==0)
+                            flag2=1;
+                        
+                    }
+                    if(func->self == 1)
+                    {
+                        write_dot_edge(fp,func->name,func->name);
+                    }
+                    if(flag2==0)
+                    {
+                        write_dot_node(fp,cptr->dep[i]->dep[j]->name,"lightgreen");
+                        fvisited[fcount++] = cptr->dep[i]->dep[j]->just_name;
+                        struct fnode *fptr=cptr->dep[i]->dep[j]->next;
+                        while(fptr!=NULL)
+                        {
+                            write_dot_edge(fp,func->name,fptr->name);
+                            int flag3 = 0;
+                            for(int tr=0; tr<fcount; tr++)
+                            {
+                                if(strcmp(fvisited[tr], fptr->just_name) == 0)
+                                    flag3 = 1;
+                            }
+
+                            if(flag3 == 0)
+                            {
+                                write_dot_node(fp,fptr->name,"lightgreen");
+                                fvisited[fcount++] = fptr->just_name;
+                            }
+                            fptr=fptr->next;
+                            
+                        }
+                    }
+                    
+                }
+                visited[vcount++]=cptr->dep[i];
+            }
+
+        }
+        cptr=cptr->next;
+    }
     
+    write_unused_headers(fp,visited,vcount);
+    write_undefined_functions(fp);
+    main_processing(fp);
+
+    //closing the graph once after all graph lines are printed.
+    fprintf(fp,"}");
+    fclose(fp);
 
 }
 int main()
@@ -823,14 +884,13 @@ int main()
     //print_structure();
 
     dependency_graph(noofhfiles);
-    main_processing();
-    system("dot -Tpng dep1.dot -o dep1.png");
+    
 
     makefile();
+    //removes file extra
+    remove("extra");
 
-    FILE *fppp=fopen("dep1.dot","a");
-    fprintf(fppp,"}");
-    fclose(fppp);
-    system("rm extra");
+    system("dot -Tpng dep1.dot -o dep1.png");
 
+    return 0;
 }
