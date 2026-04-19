@@ -1,36 +1,53 @@
-🔍 C Dependency Analyzer (ana.c)
+# 🔍 C Dependency Analyzer (ana.c)
 
-A lightweight C-based tool that analyzes .c and .h files, builds a dependency graph, tracks function relationships, and generates a Makefile automatically.
+A lightweight C-based tool that analyzes `.c` and `.h` files, builds a dependency graph, tracks function relationships, and generates a Makefile automatically.
 
-🚀 What it does
-Finds all .c and .h files in a directory
-Identifies which .c files include which headers
-Extracts function declarations from header files
-Tracks function definitions and function calls
-Detects recursion and missing definitions
-Highlights:
-unused headers
-declared but undefined functions
-Generates:
-dependency graph (dep1.dot)
-Makefile
-🎨 Graph Representation
-.c files → Blue
-.h files → Yellow
-Functions → Green
-Unused / Missing elements → Red
-⚙️ How it works (overview)
-Uses awk + popen to extract function declarations from .h files
-Parses .c files line-by-line to:
-detect function definitions
-track function calls
-Builds an internal graph using linked structures:
-cnode → C files
-hnode → Header files
-fnode → Functions
-Outputs the dependency graph in .dot format (Graphviz)
-🛠️ Setup
-Compile
+---
+
+## 🚀 What it does
+
+- Finds all `.c` and `.h` files in a directory  
+- Identifies which `.c` files include which headers  
+- Extracts function declarations from header files  
+- Tracks function definitions and function calls  
+- Detects recursion and missing definitions  
+
+### Highlights:
+- Marks unused headers  
+- Marks declared but undefined functions  
+- Generates a dependency graph (`dep1.dot`)  
+- Creates a Makefile  
+
+---
+
+## 🎨 Graph Representation
+
+- `.c` files → Blue  
+- `.h` files → Yellow  
+- Functions → Green  
+- Unused / Missing elements → Red  
+
+---
+
+## ⚙️ How it works
+
+- Uses `awk` with `popen` to extract function declarations from `.h` files  
+- Parses `.c` files line-by-line to:
+  - detect function definitions  
+  - track function calls  
+- Builds a graph using linked structures:
+  - `cnode` → C files  
+  - `hnode` → Header files  
+  - `fnode` → Functions  
+- Outputs the graph in `.dot` format (Graphviz)
+
+---
+
+## 🛠️ Setup
+
+### Compile
+
+```bash
 gcc ana.c -o ana
 Install Graphviz (for visualization)
 macOS
@@ -38,18 +55,15 @@ brew install graphviz
 Ubuntu / Debian
 sudo apt install graphviz
 ▶️ How to run
-Put all your .c and .h files in one folder (for example test)
+Put all .c and .h files in one folder (e.g., test)
 Navigate into the folder:
 cd test
-Run the analyzer:
+Run:
 ./ana
 📊 View the graph
 dot -Tpng dep1.dot -o dep1.png
-
-(Graph generation may already be handled in main)
-
 📦 Output
-dep1.dot → Dependency graph file
+dep1.dot → Dependency graph
 Makefile → Auto-generated build file
 ⚠️ Important Constraints
 
@@ -57,7 +71,7 @@ This is not a full C parser. It works best on clean, simple C code.
 
 🔹 Function Declarations (.h files)
 
-Use simple formats:
+Use:
 
 int add (int a,int b);
 
@@ -76,27 +90,27 @@ Avoid:
 #include <file.h>
 🔹 Function Definitions
 
-Keep format consistent:
+Preferred:
 
 int add (int a,int b)
 {
     return a+b;
 }
 
-Avoid one-line definitions:
+Avoid:
 
 int add(int a,int b){ return a+b; }
 🔹 Function Calls
 
-Works well for:
+Works:
 
 add(a,b);
 
-May fail for:
+May fail:
 
-// add(a,b);          
-printf("add(a,b)");  
-(*add)(a,b);         
+// add(a,b);
+printf("add(a,b)");
+(*add)(a,b);
 🔹 Main Function
 
 Preferred:
@@ -111,13 +125,10 @@ Avoid:
 int main() { stg(1,2); }
 🔹 Braces
 
-Braces must be properly balanced:
+Braces must be balanced:
 
 {
 }
-
-Unbalanced braces can break parsing.
-
 🔹 File Naming
 
 Good:
@@ -131,7 +142,7 @@ my file.c
 🚫 Limitations
 Not a full C parser
 Macros not handled
-Comments/strings may confuse function detection
+Comments/strings may interfere with parsing
 Function pointers not supported
 Complex signatures may fail
 Max line length ≈ 100 characters
