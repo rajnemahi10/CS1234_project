@@ -38,7 +38,7 @@ brew install graphviz
 Ubuntu / Debian
 sudo apt install graphviz
 ▶️ How to run
-Put all your .c and .h files in one folder (e.g., test)
+Put all your .c and .h files in one folder (for example test)
 Navigate into the folder:
 cd test
 Run the analyzer:
@@ -65,9 +65,6 @@ Avoid:
 
 unsigned int add (int a,int b);
 static int add (int a,int b);
-
-👉 Reason: parsing relies on simple token splitting (function name expected as second word)
-
 🔹 Header Includes
 
 Use:
@@ -97,9 +94,9 @@ add(a,b);
 
 May fail for:
 
-// add(a,b);          // comments
-printf("add(a,b)");  // strings
-(*add)(a,b);         // function pointers
+// add(a,b);          
+printf("add(a,b)");  
+(*add)(a,b);         
 🔹 Main Function
 
 Preferred:
@@ -112,9 +109,6 @@ int main()
 Avoid:
 
 int main() { stg(1,2); }
-
-👉 Calls inside same line may be missed
-
 🔹 Braces
 
 Braces must be properly balanced:
@@ -126,12 +120,12 @@ Unbalanced braces can break parsing.
 
 🔹 File Naming
 
-✔️ Good:
+Good:
 
 file1.c
 file2.h
 
-❌ Avoid:
+Avoid:
 
 my file.c
 🚫 Limitations
