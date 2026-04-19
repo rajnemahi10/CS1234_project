@@ -25,7 +25,21 @@ A lightweight C-based tool that analyzes `.c` and `.h` files, builds a dependenc
 - `.c` files → Blue  
 - `.h` files → Yellow  
 - Functions → Green  
-- Unused / Missing elements → Red  
+- Unused / Missing elements → Red
+
+---
+
+## What it does
+
+- finds all `.h` files
+- stores functions written in header files
+- finds all `.c` files
+- checks which headers each c file includes
+- checks which functions call other functions
+- checks main function calls also
+- marks unused headers red
+- marks functions declared but not defined red
+- makes a makefile
 
 ---
 
@@ -82,49 +96,160 @@ cd test
 ```
 dot -Tpng dep1.dot -o dep1.png
 ```
-
+Already done in main
 ---
 
 ## 📦 Output
 
-- `dep1.dot` → Dependency graph  
+- `dep1.dot` → Dependency graph
+- `dep1.png`
 - `Makefile` → Auto-generated build file  
 
 ---
 
-## ⚠️ Important Constraints
 
-This is **not a full C parser**. It works best on clean, simple C code.
+## Important constraints
 
-- Use simple function declarations in headers  
-- Avoid complex signatures and macros  
-- Keep function definitions multi-line  
-- Avoid function pointers and one-line code  
-- Ensure braces are balanced  
-- Keep filenames simple (no spaces)  
+This is not a full C parser. It works only for simple format.
+
+### Function declaration format
+
+Use this type of format in `.h`:
+
+```c
+int add (int a,int b);
+int sub (int a,int b);
+```
+
+Do not write complicated return types like:
+
+```c
+unsigned int add (int a,int b);
+static int add (int a,int b);
+```
+
+Because I am using simple awk and space splitting, so function name should basically come as second word.
+
+### Header include format
+
+Use:
+
+```c
+#include "file1.h"
+```
+
+Not:
+
+```c
+#include <file1.h>
+```
+
+### File names
+
+Do not use spaces in file names.
+
+Good:
+
+```text
+file1.c
+file2.h
+```
+
+Bad:
+
+```text
+my file.c
+```
+
+### Function definitions
+
+Try to keep definition same style as header:
+
+```c
+int add (int a,int b)
+{
+    return a+b;
+}
+```
+
+### Main format
+
+This works:
+
+```c
+int main()
+{
+    stg(1,2);
+}
+```
+
+This may miss the call:
+
+```c
+int main() { stg(1,2); }
+```
+
+because main processing starts scanning calls from next lines.
+
+Also main checking is basic, it searches for `"main"` in line, so weird names can confuse it.
+
+### Function calls
+
+Function calls are found by searching for `(` and reading backwards.
+
+Works:
+
+```c
+add(a,b);
+sub(a,b);
+```
+
+Can be wrong:
+
+```c
+// add(a,b);
+printf("add(a,b)");
+```
+
+because comments and strings are not properly ignored.
+
+### Braces
+
+Braces should be balanced.
+
+```c
+int add (int a,int b)
+{
+    return a+b;
+}
+```
+
+If `{` and `}` are wrong then function body scanning can break.
 
 ---
 
-## 🚫 Limitations
+## Limitations
 
-- Not a full C parser  
-- Macros not handled  
-- Comments/strings may confuse parsing  
-- Function pointers not supported  
-- Complex syntax may fail  
+- not a real C parser
+- macros not handled
+- comments/strings can confuse function call detection
+- long lines may break because max line size is 100
+- filenames with spaces may break
+- complex signatures may break
+- function pointers are not supported
 
 ---
 
-## 🧪 Example
+## Small example
 
-### file2.h
+`file2.h`
 
 ```c
 int sub (int a,int b);
 int stg (int a,int b);
 ```
 
-### file2.c
+`file2.c`
 
 ```c
 #include "file2.h"
@@ -145,5 +270,14 @@ int main()
 }
 ```
 
----
+Graph will have stuff like:
+
+```dot
+"file2.c"->"file2.h";
+"file2.h"->"int sub (int a,int b);";
+"int stg (int a,int b);"->"int sub (int a,int b);";
+"file2.c"->"main_of_file2.c";
+"main_of_file2.c"->"stg";
+```
+
 
