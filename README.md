@@ -32,13 +32,8 @@ A lightweight C-based tool that analyzes `.c` and `.h` files, builds a dependenc
 ## ⚙️ How it works
 
 - Uses `awk` with `popen` to extract function declarations from `.h` files  
-- Parses `.c` files line-by-line to:
-  - detect function definitions  
-  - track function calls  
-- Builds a graph using linked structures:
-  - `cnode` → C files  
-  - `hnode` → Header files  
-  - `fnode` → Functions  
+- Parses `.c` files line-by-line to detect function definitions and track function calls  
+- Builds a graph using linked structures (`cnode`, `hnode`, `fnode`)  
 - Outputs the graph in `.dot` format (Graphviz)
 
 ---
@@ -49,111 +44,89 @@ A lightweight C-based tool that analyzes `.c` and `.h` files, builds a dependenc
 
 ```bash
 gcc ana.c -o ana
-Install Graphviz (for visualization)
-macOS
+```
+
+### Install Graphviz
+
+#### macOS
+```
 brew install graphviz
-Ubuntu / Debian
+```
+
+#### Ubuntu / Debian
+```
 sudo apt install graphviz
-▶️ How to run
-Put all .c and .h files in one folder (e.g., test)
-Navigate into the folder:
+```
+
+---
+
+## ▶️ How to run
+
+1. Put all `.c` and `.h` files in one folder  
+2. Navigate into the folder:
+
+```
 cd test
-Run:
+```
+
+3. Run:
+
+```
 ./ana
-📊 View the graph
+```
+
+---
+
+## 📊 View the graph
+
+```
 dot -Tpng dep1.dot -o dep1.png
-📦 Output
-dep1.dot → Dependency graph
-Makefile → Auto-generated build file
-⚠️ Important Constraints
+```
 
-This is not a full C parser. It works best on clean, simple C code.
+---
 
-🔹 Function Declarations (.h files)
+## 📦 Output
 
-Use:
+- `dep1.dot` → Dependency graph  
+- `Makefile` → Auto-generated build file  
 
-int add (int a,int b);
+---
 
-Avoid:
+## ⚠️ Important Constraints
 
-unsigned int add (int a,int b);
-static int add (int a,int b);
-🔹 Header Includes
+This is **not a full C parser**. It works best on clean, simple C code.
 
-Use:
+- Use simple function declarations in headers  
+- Avoid complex signatures and macros  
+- Keep function definitions multi-line  
+- Avoid function pointers and one-line code  
+- Ensure braces are balanced  
+- Keep filenames simple (no spaces)  
 
-#include "file.h"
+---
 
-Avoid:
+## 🚫 Limitations
 
-#include <file.h>
-🔹 Function Definitions
+- Not a full C parser  
+- Macros not handled  
+- Comments/strings may confuse parsing  
+- Function pointers not supported  
+- Complex syntax may fail  
 
-Preferred:
+---
 
-int add (int a,int b)
-{
-    return a+b;
-}
+## 🧪 Example
 
-Avoid:
+### file2.h
 
-int add(int a,int b){ return a+b; }
-🔹 Function Calls
-
-Works:
-
-add(a,b);
-
-May fail:
-
-// add(a,b);
-printf("add(a,b)");
-(*add)(a,b);
-🔹 Main Function
-
-Preferred:
-
-int main()
-{
-    stg(1,2);
-}
-
-Avoid:
-
-int main() { stg(1,2); }
-🔹 Braces
-
-Braces must be balanced:
-
-{
-}
-🔹 File Naming
-
-Good:
-
-file1.c
-file2.h
-
-Avoid:
-
-my file.c
-🚫 Limitations
-Not a full C parser
-Macros not handled
-Comments/strings may interfere with parsing
-Function pointers not supported
-Complex signatures may fail
-Max line length ≈ 100 characters
-Assumes:
-one definition per function
-all files are in the same directory
-🧪 Example
-Header (file2.h)
+```c
 int sub (int a,int b);
 int stg (int a,int b);
-Source (file2.c)
+```
+
+### file2.c
+
+```c
 #include "file2.h"
 
 int sub (int a,int b)
@@ -170,9 +143,7 @@ int main()
 {
     stg(5,2);
 }
-Sample Graph Output (simplified)
-"file2.c"->"file2.h";
-"file2.h"->"int sub (int a,int b);";
-"int stg (int a,int b);"->"int sub (int a,int b);";
-"file2.c"->"main_of_file2.c";
-"main_of_file2.c"->"stg";
+```
+
+---
+
