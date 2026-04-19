@@ -1,161 +1,173 @@
-# 🔍 C Dependency Analyzer (ana.c)
+🔍 C Dependency Analyzer (ana.c)
 
-This is a C-based tool that analyzes `.c` and `.h` files and builds a dependency graph between them. It also tracks function calls and generates a Makefile automatically.
+A lightweight C-based tool that analyzes .c and .h files, builds a dependency graph, tracks function relationships, and generates a Makefile automatically.
 
----
-
-## 🚀 What it does
-
-* Finds all `.c` and `.h` files in the directory
-* Links which `.c` files include which headers
-* Extracts function declarations from headers
-* Tracks function calls inside definitions
-* Detects things like recursion and missing definitions
-* Generates a dependency graph (`dep1.dot`)
-* Creates a basic Makefile
-
----
-
-## ⚙️ How it works (rough idea)
-
-* Uses `awk` + `popen` to extract function signatures
-* Reads `.c` files line by line to find function definitions and calls
-* Builds a graph using linked structures (`cnode`, `hnode`, `fnode`)
-* Outputs everything into a `.dot` file for visualization
-
----
-
-## 🛠️ Setup
-
-### Compile
-
-```bash
+🚀 What it does
+Finds all .c and .h files in a directory
+Identifies which .c files include which headers
+Extracts function declarations from header files
+Tracks function definitions and function calls
+Detects recursion and missing definitions
+Highlights:
+unused headers
+declared but undefined functions
+Generates:
+dependency graph (dep1.dot)
+Makefile
+🎨 Graph Representation
+.c files → Blue
+.h files → Yellow
+Functions → Green
+Unused / Missing elements → Red
+⚙️ How it works (overview)
+Uses awk + popen to extract function declarations from .h files
+Parses .c files line-by-line to:
+detect function definitions
+track function calls
+Builds an internal graph using linked structures:
+cnode → C files
+hnode → Header files
+fnode → Functions
+Outputs the dependency graph in .dot format (Graphviz)
+🛠️ Setup
+Compile
 gcc ana.c -o ana
-```
-
-### Install Graphviz (for visualization)
-
-#### macOS
-
-```bash
+Install Graphviz (for visualization)
+macOS
 brew install graphviz
-```
-
-#### Ubuntu / Debian
-
-```bash
+Ubuntu / Debian
 sudo apt install graphviz
-```
-
----
-
-## ▶️ How to run
-
-1. Put all your `.c` and `.h` files inside a folder (for example `test`)
-2. Go into that folder:
-
-```bash
+▶️ How to run
+Put all your .c and .h files in one folder (e.g., test)
+Navigate into the folder:
 cd test
-```
-
-3. Run:
-
-```bash
+Run the analyzer:
 ./ana
-```
-
----
-
-## 📊 View the graph
-
-```bash
+📊 View the graph
 dot -Tpng dep1.dot -o dep1.png
-```
 
-This will generate an image of the dependency graph.
+(Graph generation may already be handled in main)
 
----
+📦 Output
+dep1.dot → Dependency graph file
+Makefile → Auto-generated build file
+⚠️ Important Constraints
 
-## 📦 Output
+This is not a full C parser. It works best on clean, simple C code.
 
-* `dep1.dot` → graph file
-* `Makefile` → auto-generated build file
+🔹 Function Declarations (.h files)
 
----
-## ⚠️ Constraints (Important)
+Use simple formats:
 
-* All functions used should have a declaration in a `.h` file
-* Function definitions should roughly match the declaration (same name + return type)
-* Function format should be simple (like `int func(...)`) — complex cases may not work
-* Function calls should be in normal form (`foo(a, b)`) — function pointers/macros not handled
-* Braces `{}` should be properly balanced
-* Avoid writing full functions in one line
-* All `.c` and `.h` files must be in the same directory
-* Assumes one definition per function
-* Heavy macros / advanced C syntax may not be detected properly
+int add (int a,int b);
 
-👉 Basically, this works best on clean, standard C code — not very complex or heavily macro-based code.
+Avoid:
 
----
+unsigned int add (int a,int b);
+static int add (int a,int b);
 
-## 🧪 Examples
+👉 Reason: parsing relies on simple token splitting (function name expected as second word)
 
-### ✅ Works well
+🔹 Header Includes
 
-```c
-// file.h
-int add(int a, int b);
-```
+Use:
 
-```c
-// file.c
 #include "file.h"
 
-int add(int a, int b) {
-    return a + b;
+Avoid:
+
+#include <file.h>
+🔹 Function Definitions
+
+Keep format consistent:
+
+int add (int a,int b)
+{
+    return a+b;
 }
 
-int main() {
-    int x = add(2, 3);
+Avoid one-line definitions:
+
+int add(int a,int b){ return a+b; }
+🔹 Function Calls
+
+Works well for:
+
+add(a,b);
+
+May fail for:
+
+// add(a,b);          // comments
+printf("add(a,b)");  // strings
+(*add)(a,b);         // function pointers
+🔹 Main Function
+
+Preferred:
+
+int main()
+{
+    stg(1,2);
 }
-```
 
----
+Avoid:
 
-### ❌ May not work properly
+int main() { stg(1,2); }
 
-**1. No header declaration**
+👉 Calls inside same line may be missed
 
-```c
-int add(int a, int b) {   // not declared in .h
-    return a + b;
+🔹 Braces
+
+Braces must be properly balanced:
+
+{
 }
-```
 
-**2. Complex signature**
+Unbalanced braces can break parsing.
 
-```c
-static inline int add(int a, int b);
-```
+🔹 File Naming
 
-**3. Function pointer call**
+✔️ Good:
 
-```c
-(*add)(2, 3);
-```
+file1.c
+file2.h
 
-**4. Everything in one line**
+❌ Avoid:
 
-```c
-int add(int a, int b) { return a + b; }
-```
+my file.c
+🚫 Limitations
+Not a full C parser
+Macros not handled
+Comments/strings may confuse function detection
+Function pointers not supported
+Complex signatures may fail
+Max line length ≈ 100 characters
+Assumes:
+one definition per function
+all files are in the same directory
+🧪 Example
+Header (file2.h)
+int sub (int a,int b);
+int stg (int a,int b);
+Source (file2.c)
+#include "file2.h"
 
-**5. Macro usage**
+int sub (int a,int b)
+{
+    return a-b;
+}
 
-```c
-#define CALL(x,y) add(x,y)
-CALL(2,3);
-```
+int stg (int a,int b)
+{
+    return sub(a,b);
+}
 
----
-
+int main()
+{
+    stg(5,2);
+}
+Sample Graph Output (simplified)
+"file2.c"->"file2.h";
+"file2.h"->"int sub (int a,int b);";
+"int stg (int a,int b);"->"int sub (int a,int b);";
+"file2.c"->"main_of_file2.c";
+"main_of_file2.c"->"stg";
