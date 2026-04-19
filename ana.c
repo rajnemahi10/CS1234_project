@@ -33,28 +33,28 @@ struct cnode
 };
 
 // Function signatures
-int is_ignored_function(char *name);
-int count_braces_line(char *buffer);
-void write_dot_edge(FILE *fp, char *from, char *to);
-void write_dot_node(FILE *fp, char *name, char *fillcolor);
-void write_unused_headers(FILE *fp, struct hnode **visited, int vcount);
-void write_undefined_functions(FILE *fp);
-char *getname(char *buffer);
-void main_processing(FILE *dep);
-void insertAtFrontC(char *name, int noofhfiles);
-void insertfunc(struct fnode **func,struct fnode *ins);
-void checker(struct fnode **func);
-void mark_definitions();
-int process(char *name,char *sig,char *justname);
-void fdeplinker();
-void finitializer(struct hnode *header);
-void insertAtFrontH(char *name);
-void cinitializer(int noofhfiles);
-int hinitializer();
-void chlinker();
-void makefile();
-void print_structure();
-void dependency_graph(int n);
+int is_ignored_function(char *name);//Checks whether a detected name is a keyword/function you want to ignore, like if, for, return, or printf
+int count_braces_line(char *buffer);//Counts { as +1 and } as -1 in one line.
+void write_dot_edge(FILE *fp, char *from, char *to);//Writes one quoted DOT graph edge from one node to another.
+void write_dot_node(FILE *fp, char *name, char *fillcolor);//Writes one colored DOT graph node.
+void write_unused_headers(FILE *fp, struct hnode **visited, int vcount);//Marks header files that were never included by any .c file.
+void write_undefined_functions(FILE *fp);//Marks declared functions that were not found as definitions in any .c file.
+char *getname(char *buffer);//Finds a function call in a line by locating ( and reading the function name before it.
+void main_processing(FILE *dep);//Finds main() in .c files and writes graph edges from main to functions it calls.
+void insertAtFrontC(char *name, int noofhfiles);//Creates a new .c file node and inserts it at the front of the C-file linked list.
+void insertfunc(struct fnode **func,struct fnode *ins);//Adds a called-function dependency to a function’s linked list.
+void checker(struct fnode **func);//Checks the current function body in extra to find calls to declared header functions.
+void mark_definitions();//Marks which header-declared functions are actually defined in .c files.
+int process(char *name,char *sig,char *justname);//Checks whether a line looks like the definition of a specific function signature.
+void fdeplinker();//Finds function definitions in .c files, extracts their bodies, and links their function-call dependencies.
+void finitializer(struct hnode *header);//Reads function declarations from one header file and stores them in that header node.
+void insertAtFrontH(char *name);//Creates a new header node, initializes its functions, and inserts it at the front of the header list.
+void cinitializer(int noofhfiles);//Finds all .c files in the folder and creates C-file nodes for them.
+int hinitializer();//Finds all .h files in the folder, creates header nodes, and returns the number of headers.
+void chlinker();//Links each .c file node to the .h files it includes.
+void makefile();//Generates a Makefile based on discovered .c and .h dependencies.
+void print_structure();//Prints the internal C/header/function dependency structure for debugging.
+void dependency_graph(int n);//Writes the complete dep1.dot dependency graph.
 int main();
 
 int is_ignored_function(char *name)
