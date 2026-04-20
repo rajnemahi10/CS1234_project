@@ -55,7 +55,6 @@ void chlinker();//Links each .c file node to the .h files it includes.
 void makefile();//Generates a Makefile based on discovered .c and .h dependencies.
 void print_structure();//Prints the internal C/header/function dependency structure for debugging.
 void dependency_graph(int n);//Writes the complete dep1.dot dependency graph.
-int main();
 
 int is_ignored_function(char *name)
 {

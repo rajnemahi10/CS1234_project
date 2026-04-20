@@ -11,6 +11,11 @@ A lightweight C-based tool that analyzes `.c` and `.h` files, builds a dependenc
 - Extracts function declarations from header files  
 - Tracks function definitions and function calls  
 - Detects recursion and missing definitions  
+- Checks which functions call other functions
+- Checks main function calls also
+- Marks unused headers red
+- Marks functions declared but not defined red
+- Makes a makefile
 
 ### Highlights:
 - Marks unused headers  
@@ -26,21 +31,6 @@ A lightweight C-based tool that analyzes `.c` and `.h` files, builds a dependenc
 - `.h` files → Yellow  
 - Functions → Green  
 - Unused / Missing elements → Red
-
----
-
-## What it does
-
-- finds all `.h` files
-- stores functions written in header files
-- finds all `.c` files
-- checks which headers each c file includes
-- checks which functions call other functions
-- checks main function calls also
-- marks unused headers red
-- marks functions declared but not defined red
-- makes a makefile
-
 ---
 
 ## ⚙️ How it works
