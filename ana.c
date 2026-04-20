@@ -870,6 +870,51 @@ void dependency_graph(int n)
     fclose(fp);
 
 }
+void free_all()
+{
+    struct cnode *cptr=headc;
+    struct cnode *tempc=headc;
+    while(cptr!=NULL)
+    {
+        tempc=cptr;
+        cptr=cptr->next;
+        free(tempc->name);
+        free(tempc->dep);
+        free(tempc);
+    }
+
+    struct hnode *hptr=headh;
+    struct hnode *temph=headh;
+    while(hptr!=NULL)
+    {
+        for(int j=0;j<hptr->dep_count;j++)
+        {
+            struct fnode *fptr=hptr->dep[j];
+            struct fnode *tempf=fptr;
+                    
+            while(tempf!=NULL)
+            {
+                fptr=tempf;
+                tempf=fptr->next;
+
+                free(fptr->name);
+                free(fptr->just_name);
+                free(fptr);
+            }
+        }
+        temph=hptr;
+
+        hptr=hptr->next;
+
+        free(temph->dep);
+        free(temph->name);
+        free(temph);
+    }
+    headc=NULL;
+    headh=NULL;
+}
+
+
 int main()
 {
     int noofhfiles = hinitializer();
@@ -890,6 +935,8 @@ int main()
     remove("extra");
 
     system("dot -Tpng dep1.dot -o dep1.png");
+
+    free_all();
 
     return 0;
 }
