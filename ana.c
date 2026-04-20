@@ -58,14 +58,7 @@ void dependency_graph(int n);//Writes the complete dep1.dot dependency graph.
 
 int is_ignored_function(char *name)
 {
-    return strcmp(name, "if") == 0 ||
-           strcmp(name, "while") == 0 ||
-           strcmp(name, "for") == 0 ||
-           strcmp(name, "switch") == 0 ||
-           strcmp(name, "return") == 0 ||
-           strcmp(name, "sizeof") == 0 ||
-           strcmp(name, "printf") == 0 ||
-           strlen(name) == 0;
+    return strcmp(name, "if") == 0 || strcmp(name, "while") == 0 || strcmp(name, "for") == 0 || strcmp(name, "switch") == 0 || strcmp(name, "return") == 0 || strcmp(name, "sizeof") == 0 || strcmp(name, "printf") == 0 || strlen(name) == 0;
 }
 
 int count_braces_line(char *buffer)
@@ -197,10 +190,6 @@ void main_processing(FILE *dep)
         }
         if(flag==1)
         {
-            
-            
-            
-                
             while(fgets(buffer,MAX_LINE,fp)!=NULL)
             {
                 char *temp = buffer;
@@ -221,9 +210,6 @@ void main_processing(FILE *dep)
 
                     free(funcyy);
                 }
-
-                
-                
                 brace_count += count_braces_line(buffer);
                 if(brace_count==0)
                     break;
@@ -233,9 +219,6 @@ void main_processing(FILE *dep)
         }
         fclose(fp);
         cptr = cptr->next;
-
-    
-    
     }
      
 }
@@ -260,7 +243,6 @@ void insertfunc(struct fnode **func,struct fnode *ins)
     new->just_name = strdup(ins->just_name);
     new->self = ins->self;
     new->visited=ins->visited;
-    
 
     new->next=(*func)->next;
     (*func)->next=new;
@@ -358,11 +340,8 @@ int process(char *name,char *sig,char *justname)
     strcpy(jcopy, justname);
     strcat(jcopy, " ");
 
-
     if(strstr(name,ret)==NULL || (strstr(name,j2)==NULL && strstr(name,jcopy)==NULL))
         return 0;
-    
-    
 
     return 1;
     
@@ -695,7 +674,7 @@ void print_structure()
                 {
                     printf("       - %s\n", f->name);
 
-                    //  print dependencies
+                    //  printing dependencies
                     struct fnode *dep = f->next;
 
                     if (dep != NULL)
