@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-int MAX_NAME = 100;
-int MAX_CMD = 100;
-int MAX_LINE=100;
+int MAX_NAME = 1000;
+int MAX_CMD = 1000;
+int MAX_LINE=1000;
 #define MAX_FUNC 1000//constraint
 struct cnode *headc = NULL;
 struct hnode *headh = NULL;
