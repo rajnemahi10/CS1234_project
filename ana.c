@@ -166,10 +166,10 @@ void main_processing(FILE *dep)
                     if(*ptr=='(')
                     {
                         flag=1;//valid main
-                        printf("found main in %s\n",cptr->name);
+                        //printf("found main in %s\n",cptr->name);
 
                         
-                        printf("printing main dependency in dependency for %s\n",cptr->name);
+                        //printf("printing main dependency in dependency for %s\n",cptr->name);
                         char main_name[MAX_NAME + 20];
                         sprintf(main_name,"main_of_%s",cptr->name);
                         //use quoted DOT edge so filenames like file2.c are valid.
