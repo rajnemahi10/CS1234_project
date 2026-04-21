@@ -87,7 +87,7 @@ cd test
 ```
 dot -Tpng dep1.dot -o dep1.png
 ```
-Already done in main
+- Already done in main
 ---
 
 ## Output(All Generated in Test)
