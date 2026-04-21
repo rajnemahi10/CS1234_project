@@ -1,23 +1,20 @@
-# 🔍 C Dependency Analyzer (ana.c)
+# C Dependency Analyzer (ana.c)
 
-A lightweight C-based tool that analyzes `.c` and `.h` files, builds a dependency graph, tracks function relationships, and generates a Makefile automatically.
+A C-based tool that analyzes `.c` and `.h` files, builds a dependency graph, tracks function dependencies, and generates a Makefile automatically.
 
 ---
 
-## 🚀 What it does
+## What it does
 
 - Finds all `.c` and `.h` files in a directory  
 - Identifies which `.c` files include which headers  
 - Extracts function declarations from header files  
 - Tracks function definitions and function calls  
-- Detects recursion and missing definitions  
+- Detects recursion and missing definitions 
 - Checks which functions call other functions
-- Checks main function calls also
-- Marks unused headers red
-- Marks functions declared but not defined red
-- Makes a makefile
+- Checks main function calls 
 
-### Highlights:
+### Working:
 - Marks unused headers  
 - Marks declared but undefined functions  
 - Generates a dependency graph (`dep1.dot`)  
@@ -25,24 +22,25 @@ A lightweight C-based tool that analyzes `.c` and `.h` files, builds a dependenc
 
 ---
 
-## 🎨 Graph Representation
+## Graph Representation
 
 - `.c` files → Blue  
 - `.h` files → Yellow  
 - Functions → Green  
 - Unused / Missing elements → Red
+- Functions in main - White
 ---
 
-## ⚙️ How it works
+## How it works
 
-- Uses `awk` with `popen` to extract function declarations from `.h` files  
+- Uses `awk` with `popen` to extract function signatures from `.h` files  
 - Parses `.c` files line-by-line to detect function definitions and track function calls  
 - Builds a graph using linked structures (`cnode`, `hnode`, `fnode`)  
 - Outputs the graph in `.dot` format (Graphviz)
 
 ---
 
-## 🛠️ Setup
+## Setup
 
 ### Compile
 
@@ -67,9 +65,9 @@ sudo apt install graphviz
 
 ---
 
-## ▶️ How to run
+## How to run
 
-1. Put all `.c` and `.h` files in one folder  
+1. Put all `.c` and `.h` files in one folder (test) 
 2. Navigate into the folder:
 
 ```
@@ -84,7 +82,7 @@ cd test
 
 ---
 
-## 📊 View the graph
+## View the graph
 
 ```
 dot -Tpng dep1.dot -o dep1.png
@@ -92,18 +90,16 @@ dot -Tpng dep1.dot -o dep1.png
 Already done in main
 ---
 
-## 📦 Output
+## Output(All Generated in Test)
 
 - `dep1.dot` → Dependency graph
 - `dep1.png`
-- `Makefile` → Auto-generated build file  
+- `Makefile` → Build File (to run all .c files added by you in test)
 
 ---
 
 
 ## Important constraints
-
-This is not a full C parser. It works only for simple format.
 
 ### Function declaration format
 
