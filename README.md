@@ -49,6 +49,9 @@ A lightweight C-based tool that analyzes `.c` and `.h` files, builds a dependenc
 ```bash
 gcc ana.c -o ana
 ```
+```bash
+mv ./ana test
+```
 
 ### Install Graphviz
 
