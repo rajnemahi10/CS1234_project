@@ -219,10 +219,8 @@ If `{` and `}` are wrong then function body scanning can break.
 
 ## Limitations
 
-- not a real C parser
 - macros not handled
 - comments/strings can confuse function call detection
-- long lines may break because max line size is 100
 - filenames with spaces may break
 - complex signatures may break
 - function pointers are not supported
